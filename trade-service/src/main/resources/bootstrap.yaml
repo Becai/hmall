@@ -2,10 +2,10 @@ spring:
   application:
     name: trade-service # 微服务名称
   profiles:
-    active: dev
+    active: local
   cloud:
     nacos:
-      server-addr: 192.168.150.101:8848
+      server-addr: 192.168.198.128:8848
       config:
         file-extension: yaml
         shared-configs:

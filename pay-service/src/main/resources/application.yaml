@@ -4,7 +4,7 @@ spring:
   application:
     name: pay-service # 微服务名称
   profiles:
-    active: dev
+    active: local
   datasource:
     url: jdbc:mysql://${hm.db.host}:3306/hm-pay?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -12,13 +12,13 @@ spring:
     password: ${hm.db.pw}
   cloud:
     nacos:
-      server-addr: 192.168.150.101:8848
+      server-addr: 192.168.198.128:8848
   rabbitmq:
-    host: 192.168.150.101
+    host: 192.168.198.128
     port: 5672
     virtual-host: /hmall
-    username: hmall
-    password: 123
+    username: itheima
+    password: 123321
 mybatis-plus:
   configuration:
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
