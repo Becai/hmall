@@ -14,6 +14,9 @@ public class PayClientFallback implements FallbackFactory<PayClient> {
             public PayOrderDTO queryPayOrderByBizOrderNo(Long id) {
                 return null;
             }
+
+            @Override
+            public void updatePayOrderStatusByBizOrderNo(Long orderId, Integer status) {}
         };
     }
 }

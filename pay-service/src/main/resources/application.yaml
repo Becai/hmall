@@ -17,8 +17,8 @@ spring:
     host: 192.168.198.128
     port: 5672
     virtual-host: /hmall
-    username: itheima
-    password: 123321
+    username: hmall
+    password: 123
 mybatis-plus:
   configuration:
     default-enum-type-handler: com.baomidou.mybatisplus.core.handlers.MybatisEnumTypeHandler
