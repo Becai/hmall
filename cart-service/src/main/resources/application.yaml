@@ -1,10 +1,10 @@
 server:
   port: 8082
-  tomcat:
-    threads:
-      max: 25
-    accept-count: 25
-    max-connections: 100
+#  tomcat:
+#    threads:
+#      max: 25
+#    accept-count: 25
+#    max-connections: 100
 feign:
   okhttp:
     enabled: true

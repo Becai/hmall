@@ -1,6 +1,6 @@
 spring:
   application:
-    name: trade-service # 微服务名称
+    name: user-service # 微服务名称
   profiles:
     active: local
   cloud:
@@ -12,5 +12,3 @@ spring:
           - data-id: shared-jdbc.yaml
           - data-id: shared-log.yaml
           - data-id: shared-swagger.yaml
-          - data-id: shared-seata.yaml
-          - data-id: shared-mq.yaml
