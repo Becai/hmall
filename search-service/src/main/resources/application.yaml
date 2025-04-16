@@ -1,0 +1,15 @@
+server:
+  port: 8087
+spring:
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8090
+      http-method-specify: true #开启请求方式加前缀
+hm:
+  db:
+    database: hm-item
+  swagger:
+    title: "黑马商城商品搜索接口文档"
+    desc: "黑马商城商品搜索接口文档"
+    package: com.hmall.search.controller
