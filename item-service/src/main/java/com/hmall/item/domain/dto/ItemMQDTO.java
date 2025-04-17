@@ -12,5 +12,5 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ItemMQDTO implements Serializable {
     private ItemOperate operate; //操作类型
-    private ItemDTO itemDTO;//ItemDto对象
+    private ItemDTO itemDTO;//ItemDTO对象
 }

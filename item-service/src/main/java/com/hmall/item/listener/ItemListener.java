@@ -35,17 +35,17 @@ public class ItemListener {
             exchange = @Exchange(name = MQConstants.ITEM_EXCHANGE_NAME, delayed = "false"),
             key = MQConstants.ITEM_QUERY_KEY
     ))
-    public void listenerItemMessage(ItemMQDTO itemMQDto) {
-        if (itemMQDto.getItemDTO().getId() == null) return;
-        switch (itemMQDto.getOperate()) {
+    public void listenerItemMessage(ItemMQDTO itemMQDTO) {
+        if (itemMQDTO.getItemDTO().getId() == null) return;
+        switch (itemMQDTO.getOperate()) {
             case ADD: //添加
-                addItemByIndex(itemMQDto.getItemDTO());
+                addItemByIndex(itemMQDTO.getItemDTO());
                 break;
             case REMOVE://删除
-                removeItemByIndex(itemMQDto.getItemDTO());
+                removeItemByIndex(itemMQDTO.getItemDTO());
                 break;
             case UPDATE://更新
-                updateItemByIndex(itemMQDto.getItemDTO());
+                updateItemByIndex(itemMQDTO.getItemDTO());
                 break;
             default:
                 log.error("未知的操作类型");

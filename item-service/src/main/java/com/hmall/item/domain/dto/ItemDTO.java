@@ -5,10 +5,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Builder;
 import lombok.Data;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @ApiModel(description = "商品实体")
-public class ItemDTO {
+public class ItemDTO implements Serializable {
     @ApiModelProperty("商品id")
     private Long id;
     @ApiModelProperty("SKU名称")

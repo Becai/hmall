@@ -92,7 +92,7 @@ public class ItemController {
                 MQConstants.ITEM_QUERY_KEY, //routingKey
                 new ItemMQDTO(
                         ItemOperate.REMOVE,  //操作类型
-                        ItemDTO.builder().id(id).build())); //空的ItemDto对象添加一个ID
+                        ItemDTO.builder().id(id).build())); //空的ItemDTO对象添加一个ID
     }
 
     @ApiOperation("批量扣减库存")
