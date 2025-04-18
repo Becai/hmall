@@ -13,7 +13,6 @@ import com.hmall.item.mapper.ItemMapper;
 import com.hmall.item.service.IItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,8 +69,8 @@ public class ItemServiceImpl extends ServiceImpl<ItemMapper, Item> implements II
         baseMapper.insert(item);//插入数据
         itemDTO.setId(item.getId());//设置ID
         rabbitTemplate.convertAndSend(
-                MQConstants.ITEM_EXCHANGE_NAME,
-                MQConstants.ITEM_QUERY_KEY,
+                MQConstants.ITEM_SYNC_EXCHANGE_NAME,
+                MQConstants.ITEM_SYNC_UPDATE_KEY,
                 new ItemMQDTO(ItemOperate.ADD, itemDTO)
         );
     }

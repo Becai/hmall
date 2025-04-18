@@ -31,9 +31,9 @@ public class ItemListener {
     private final RestHighLevelClient client;
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(name = MQConstants.DELAY_ORDER_QUEUE_NAME),
-            exchange = @Exchange(name = MQConstants.ITEM_EXCHANGE_NAME, delayed = "false"),
-            key = MQConstants.ITEM_QUERY_KEY
+            value = @Queue(name = MQConstants.ITEM_SYNC_QUEUE_NAME),
+            exchange = @Exchange(name = MQConstants.ITEM_SYNC_EXCHANGE_NAME),
+            key = MQConstants.ITEM_SYNC_UPDATE_KEY
     ))
     public void listenerItemMessage(ItemMQDTO itemMQDTO) {
         if (itemMQDTO.getItemDTO().getId() == null) return;

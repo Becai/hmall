@@ -77,8 +77,8 @@ public class ItemController {
         // 更新
         itemService.updateById(BeanUtils.copyBean(item, Item.class));
         rabbitTemplate.convertAndSend(
-                MQConstants.ITEM_EXCHANGE_NAME,
-                MQConstants.ITEM_QUERY_KEY,
+                MQConstants.ITEM_SYNC_EXCHANGE_NAME,
+                MQConstants.ITEM_SYNC_UPDATE_KEY,
                 new ItemMQDTO(
                         ItemOperate.UPDATE,
                         item));
@@ -88,8 +88,8 @@ public class ItemController {
     public void deleteItemById(@PathVariable("id") Long id) {
         itemService.removeById(id);
         rabbitTemplate.convertAndSend(
-                MQConstants.ITEM_EXCHANGE_NAME, //交换机名
-                MQConstants.ITEM_QUERY_KEY, //routingKey
+                MQConstants.ITEM_SYNC_EXCHANGE_NAME, //交换机名
+                MQConstants.ITEM_SYNC_UPDATE_KEY, //routingKey
                 new ItemMQDTO(
                         ItemOperate.REMOVE,  //操作类型
                         ItemDTO.builder().id(id).build())); //空的ItemDTO对象添加一个ID
