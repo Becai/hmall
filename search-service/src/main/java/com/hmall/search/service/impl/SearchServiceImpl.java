@@ -1,6 +1,5 @@
 package com.hmall.search.service.impl;
 
-
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmall.common.domain.PageDTO;
@@ -11,11 +10,10 @@ import com.hmall.search.domain.query.ItemPageQuery;
 import com.hmall.search.domain.vo.CategoryAndBrandVo;
 import com.hmall.search.mapper.SearchMapper;
 import com.hmall.search.service.ISearchService;
-import org.apache.http.HttpHost;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -37,25 +35,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-
-/**
- * <p>
- * 商品表 服务实现类
- * </p>
- *
- * @author 虎哥
- */
+@Slf4j
 @Service
-
 public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implements ISearchService {
+    
     @Resource
-    private  RestHighLevelClient restHighLevelClient;
+    private RestHighLevelClient restHighLevelClient;
+    
     @Override
     public PageDTO<ItemDoc> EsSearch(ItemPageQuery query) {
-        //建立连接
-        restHighLevelClient = new RestHighLevelClient(RestClient.builder(
-                HttpHost.create("http://192.168.198.128:9200")
-        ));
         PageDTO<ItemDoc> result = new PageDTO<>();
         //1.构造请求
         SearchRequest searchRequest = new SearchRequest("items");
@@ -64,8 +52,6 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
         //精准总数
         searchRequest.source().trackTotalHits(true);
         if (query.getKey()!=null && !"".equals(query.getKey())) {
-//            searchRequest.source()
-//                    .query(QueryBuilders.matchQuery("name", query.getKey()));
             boolQueryBuilder.must(QueryBuilders.matchQuery("name", query.getKey()));
         }
         //高亮
@@ -85,28 +71,27 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
         }
         //分类
         if (query.getCategory()!=null && !"".equals(query.getCategory())){
-            boolQueryBuilder.filter(QueryBuilders.termQuery("category", query.getCategory()));
-//            searchRequest.source().query(QueryBuilders.termQuery("category", query.getCategory()));
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category.keyword", query.getCategory()));
         }
         //品牌
         if (query.getBrand()!=null && !"".equals(query.getBrand())){
-            boolQueryBuilder.filter(QueryBuilders.termQuery("brand", query.getBrand()));
-//            searchRequest.source().query(QueryBuilders.termQuery("brand", query.getBrand()));
+            boolQueryBuilder.filter(QueryBuilders.termQuery("brand.keyword", query.getBrand()));
         }
         //价格
         if (query.getMinPrice()!=null && query.getMaxPrice()!=null) {
             boolQueryBuilder.filter(QueryBuilders.rangeQuery("price").gte(query.getMinPrice()).lte(query.getMaxPrice()));
-//            searchRequest.source().query(QueryBuilders.rangeQuery("price").gte(query.getMinPrice()).lte(query.getMaxPrice()));
         }
 
-
-        //searchRequest.source().query(boolQueryBuilder);
         //排名 广告优先
-        searchRequest.source().query(QueryBuilders.functionScoreQuery(boolQueryBuilder,
+        FunctionScoreQueryBuilder functionScoreQuery = QueryBuilders.functionScoreQuery(boolQueryBuilder,
                 new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(QueryBuilders.termQuery("isAD", true),
-                                ScoreFunctionBuilders.weightFactorFunction(100))
-                }).boostMode(CombineFunction.MULTIPLY));
+                        new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+                                QueryBuilders.termQuery("isAD", true),
+                                ScoreFunctionBuilders.weightFactorFunction(10)
+                        )
+                }).boostMode(CombineFunction.SUM);
+        
+        searchRequest.source().query(functionScoreQuery).sort("_score", SortOrder.DESC);
 
         try {
             //发起请求
@@ -132,13 +117,7 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
             }
             result.setList(list);
         } catch (IOException e) {
-            log.error("查询ES失败,出现异常");
-        } finally {
-            try {
-                restHighLevelClient.close();
-            } catch (IOException e) {
-                log.error("连接异常");
-            }
+            log.error("查询ES失败,出现异常", e);
         }
         //返回
         return result;
@@ -152,9 +131,7 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        restHighLevelClient = new RestHighLevelClient(RestClient.builder(
-                HttpHost.create("http://192.168.198.128:9200")
-        ));
+        
         CategoryAndBrandVo categoryAndBrandVo = new CategoryAndBrandVo();
         // 1.创建Request
         SearchRequest request = new SearchRequest("items");
@@ -163,10 +140,10 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
             boolQueryBuilder.must(QueryBuilders.matchQuery("name", query.getKey()));
         }
         if (query.getCategory()!=null && !"".equals(query.getCategory())){
-            boolQueryBuilder.filter(QueryBuilders.termQuery("category", query.getCategory()));
+            boolQueryBuilder.filter(QueryBuilders.termQuery("category.keyword", query.getCategory()));
         }
         if (query.getBrand()!=null && !"".equals(query.getBrand())){
-            boolQueryBuilder.filter(QueryBuilders.termQuery("brand", query.getBrand()));
+            boolQueryBuilder.filter(QueryBuilders.termQuery("brand.keyword", query.getBrand()));
         }
         if (query.getMinPrice()!=null && query.getMaxPrice()!=null){
             boolQueryBuilder.filter(QueryBuilders.rangeQuery("price").gte(query.getMinPrice()).lte(query.getMaxPrice()));
@@ -174,11 +151,11 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
         request.source().query(boolQueryBuilder).size(0);
 
         request.source().aggregation(
-                AggregationBuilders.terms("category_agg").field("category").size(10)
+                AggregationBuilders.terms("category_agg").field("category.keyword").size(10)
         );
 
         request.source().aggregation(
-                AggregationBuilders.terms("brand_agg").field("brand").size(10));
+                AggregationBuilders.terms("brand_agg").field("brand.keyword").size(10));
         List<String> categoryList = new ArrayList<>();
         List<String> brandList = new ArrayList<>();
         // 4.发送请求
@@ -202,15 +179,10 @@ public class SearchServiceImpl extends ServiceImpl<SearchMapper, Item> implement
                 brandList.add(brand);
             }
         } catch (IOException e) {
-            log.error("发送请求异常");
+            log.error("发送请求异常", e);
         }
         categoryAndBrandVo.setCategory(categoryList);
         categoryAndBrandVo.setBrand(brandList);
-        try {
-            restHighLevelClient.close();
-        } catch (IOException e) {
-            log.error("关闭连接异常");
-        }
         return categoryAndBrandVo;
     }
 }
