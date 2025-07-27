@@ -44,7 +44,7 @@ public class CartController {
     @GetMapping
     public List<CartVO> queryMyCarts(@RequestHeader(value = "user-info", required = false) String userInfo){
         System.out.println("userInfo = " + userInfo);
-        return cartService.queryMyCarts();
+        return cartService.queryMyCartsWithCache();
     }
 
     @ApiOperation("批量删除购物车中商品")

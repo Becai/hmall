@@ -6,3 +6,15 @@ hm:
   swagger:
     title: "黑马商城商品服务接口文档"
     package: com.hmall.item.controller
+
+spring:
+  redis:
+    host: 192.168.198.128
+    port: 6379
+    password: 123321
+    lettuce:
+      pool:
+        max-active: 10
+        max-idle: 10
+        min-idle: 1
+        time-between-eviction-runs: 10s

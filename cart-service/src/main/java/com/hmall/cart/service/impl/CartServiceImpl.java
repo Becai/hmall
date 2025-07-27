@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.hmall.api.client.ItemClient;
 import com.hmall.api.dto.ItemDTO;
 import com.hmall.cart.config.CartProperties;
+import com.hmall.cart.constants.CacheConstants;
 import com.hmall.cart.domain.dto.CartFormDTO;
 import com.hmall.cart.domain.po.Cart;
 import com.hmall.cart.domain.vo.CartVO;
@@ -16,15 +17,20 @@ import com.hmall.common.utils.BeanUtils;
 import com.hmall.common.utils.CollUtils;
 import com.hmall.common.utils.UserContext;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -43,8 +49,12 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
     // private final DiscoveryClient discoveryClient;
 
     private final ItemClient itemClient;
-
     private final CartProperties cartProperties;
+    
+    // 需要@Qualifier的字段，手动注入
+    @Autowired
+    @Qualifier("customRedisTemplate")
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void addItem2Cart(CartFormDTO cartFormDTO) {
@@ -55,6 +65,7 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         if(checkItemExists(cartFormDTO.getItemId(), userId)){
             // 2.1.存在，则更新数量
             baseMapper.updateNum(cartFormDTO.getItemId(), userId);
+            clearCartCache(userId);
             return;
         }
         // 2.2.不存在，判断是否超过购物车数量
@@ -67,6 +78,58 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         cart.setUserId(userId);
         // 3.3.保存到数据库
         save(cart);
+        clearCartCache(userId);
+    }
+
+    @Override
+    public List<CartVO> queryMyCartsWithCache() {
+        Long userId = UserContext.getUser();
+        String key = CacheConstants.CART_USER_CACHE_KEY_PREFIX + userId;
+        Object cache = redisTemplate.opsForValue().get(key);
+        if (cache != null) {
+            if (cache instanceof List) {
+                return (List<CartVO>) cache;
+            } else if ("NULL".equals(cache)) {
+                return CollUtils.emptyList();
+            }
+        }
+        // 缓存击穿保护：加分布式锁
+        String lockKey = CacheConstants.CART_USER_LOCK_KEY_PREFIX + userId;
+        boolean lock = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, "1", CacheConstants.LOCK_EXPIRE_SECONDS, TimeUnit.SECONDS));
+        if (lock) {
+            try {
+                cache = redisTemplate.opsForValue().get(key);
+                if (cache != null) {
+                    if (cache instanceof List) {
+                        return (List<CartVO>) cache;
+                    } else if ("NULL".equals(cache)) {
+                        return CollUtils.emptyList();
+                    }
+                }
+                List<CartVO> vos = queryMyCarts();
+                if (CollUtils.isEmpty(vos)) {
+                    redisTemplate.opsForValue().set(key, "NULL", CacheConstants.NULL_CACHE_EXPIRE_MINUTES, TimeUnit.MINUTES);
+                    return CollUtils.emptyList();
+                } else {
+                    redisTemplate.opsForValue().set(key, vos, CacheConstants.CART_CACHE_EXPIRE_HOURS, TimeUnit.HOURS);
+                    return vos;
+                }
+            } finally {
+                redisTemplate.delete(lockKey);
+            }
+        } else {
+            try { Thread.sleep(50); } catch (InterruptedException ignored) {}
+            return queryMyCartsWithCache();
+        }
+    }
+
+    /**
+     * 清理用户购物车缓存
+     * @param userId 用户ID
+     */
+    private void clearCartCache(Long userId) {
+        String key = CacheConstants.CART_USER_CACHE_KEY_PREFIX + userId;
+        redisTemplate.delete(key);
     }
 
     @Override
@@ -143,6 +206,27 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
                 .in(Cart::getItemId, itemIds);
         // 2.删除
         remove(queryWrapper);
+        clearCartCache(UserContext.getUser());
+    }
+
+    // 重写updateById和removeById，清理缓存
+    @Override
+    public boolean updateById(Cart cart) {
+        boolean result = super.updateById(cart);
+        if (result && cart.getUserId() != null) {
+            clearCartCache(cart.getUserId());
+        }
+        return result;
+    }
+
+    @Override
+    public boolean removeById(Serializable id) {
+        Cart cart = getById(id);
+        boolean result = super.removeById(id);
+        if (result && cart != null && cart.getUserId() != null) {
+            clearCartCache(cart.getUserId());
+        }
+        return result;
     }
 
     private void checkCartsFull(Long userId) {

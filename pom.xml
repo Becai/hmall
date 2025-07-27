@@ -40,6 +40,9 @@
         <hutool.version>5.8.11</hutool.version>
         <mysql.version>8.0.23</mysql.version>
         <elasticsearch.version>7.12.1</elasticsearch.version>
+        <spring-data-redis.version>2.7.12</spring-data-redis.version>
+        <lettuce-core.version>6.1.8.RELEASE</lettuce-core.version>
+        <jackson-datatype-jsr310.version>2.13.4</jackson-datatype-jsr310.version>
     </properties>
 
     <!-- 对依赖包进行管理 -->
@@ -78,6 +81,21 @@
                 <groupId>cn.hutool</groupId>
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-redis</artifactId>
+                <version>${spring-data-redis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.lettuce</groupId>
+                <artifactId>lettuce-core</artifactId>
+                <version>${lettuce-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
+                <version>${jackson-datatype-jsr310.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

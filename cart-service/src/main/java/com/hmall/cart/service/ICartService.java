@@ -23,4 +23,7 @@ public interface ICartService extends IService<Cart> {
     List<CartVO> queryMyCarts();
 
     void removeByItemIds(Collection<Long> itemIds);
+
+    // 查询我的购物车（带缓存）
+    List<CartVO> queryMyCartsWithCache();
 }
