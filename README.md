@@ -7,29 +7,29 @@ HMall 是一个基于 Spring Cloud 微服务架构的电商系统，采用分布
 ## 技术栈
 
 ### 核心框架
-- **Spring Boot 2.7.12** - 基础框架
-- **Spring Cloud 2021.0.3** - 微服务框架
-- **Spring Cloud Alibaba 2021.0.4.0** - 阿里云微服务组件
+- **Spring Boot** - 基础框架
+- **Spring Cloud** - 微服务框架
+- **Spring Cloud Alibaba** - 阿里云微服务组件
 
 ### 微服务组件
 - **Nacos** - 服务注册与发现、配置中心
-- **Gateway** - API 网关
+- **Spring Cloud Gateway** - API 网关
 - **OpenFeign** - 服务间调用
 - **Sentinel** - 熔断限流
 - **Seata** - 分布式事务
 
 ### 数据存储
-- **MySQL 8.0.23** - 关系型数据库
+- **MySQL** - 关系型数据库
 - **Redis** - 缓存数据库
-- **Elasticsearch 7.12.1** - 搜索引擎
+- **Elasticsearch** - 搜索引擎
 
 ### 消息队列
 - **RabbitMQ** - 异步消息处理
 
 ### 其他技术
-- **MyBatis-Plus 3.4.3** - ORM 框架
+- **MyBatis-Plus** - ORM 框架
 - **JWT** - 身份认证
-- **Hutool 5.8.11** - 工具类库
+- **Hutool** - 工具类库
 - **Knife4j** - API 文档
 
 ## 系统架构
